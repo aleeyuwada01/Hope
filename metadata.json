@@ -1,0 +1,5 @@
+{
+  "name": "Compound Growth Calculator",
+  "description": "A replica of the compounding trading spreadsheet with adjustable Risk:Reward (RR) settings, visual charts, and export capabilities.",
+  "requestFramePermissions": []
+}
