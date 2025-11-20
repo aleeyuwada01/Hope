@@ -8,7 +8,7 @@ import ControlPanel from './components/ControlPanel';
 import Tracker from './components/Tracker';
 import Stats from './components/Stats';
 import { analyzePlan } from './services/geminiService';
-import { FileImage, FileText, Sparkles, Moon, Sun } from 'lucide-react';
+import { FileImage, FileText, Sparkles, Moon, Sun, ChevronUp, ChevronDown } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -42,6 +42,18 @@ export default function App() {
 
   // Dark Mode State
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Header State
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(true);
+
+  // Collapse header by default when on tracker view
+  useEffect(() => {
+    if (view === 'tracker') {
+        setIsHeaderExpanded(false);
+    } else {
+        setIsHeaderExpanded(true);
+    }
+  }, [view]);
 
   // Toggle Dark Mode Class on HTML element
   useEffect(() => {
@@ -194,42 +206,70 @@ export default function App() {
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header Section */}
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 transition-all">
-          <div>
-            <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 uppercase tracking-tight">
-              Compound Growth
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-1 font-bold text-sm uppercase tracking-wide">
-              {view === 'calculator' ? 'Visual Trade Calculator' : view === 'tracker' ? 'Live Challenge Tracker' : 'Performance Statistics'}
-            </p>
-          </div>
+        <header className={`relative bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out overflow-hidden ${isHeaderExpanded ? 'p-6' : 'p-3'}`}>
           
-          <div className="flex items-center gap-3">
-             <button 
-                onClick={toggleTheme}
-                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all mr-2"
-                title="Toggle Theme"
-             >
-                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-             </button>
+          <button 
+            onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+            className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors z-10"
+            title={isHeaderExpanded ? "Collapse Header" : "Expand Header"}
+          >
+             {isHeaderExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </button>
 
-            {view === 'calculator' && (
-                <>
+          <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 transition-opacity duration-300 ${isHeaderExpanded ? 'opacity-100' : 'opacity-100'}`}>
+            <div className="flex items-center gap-4">
+                 <div className={`transition-all duration-300 ${!isHeaderExpanded ? 'scale-90 origin-left' : ''}`}>
+                    <h1 className={`${isHeaderExpanded ? 'text-4xl' : 'text-xl'} font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 uppercase tracking-tight transition-all`}>
+                      Compound Growth
+                    </h1>
+                    {isHeaderExpanded && (
+                        <p className="text-slate-600 dark:text-slate-400 mt-1 font-bold text-sm uppercase tracking-wide">
+                          {view === 'calculator' ? 'Visual Trade Calculator' : view === 'tracker' ? 'Live Challenge Tracker' : 'Performance Statistics'}
+                        </p>
+                    )}
+                 </div>
+            </div>
+            
+            {/* Controls Section */}
+            {isHeaderExpanded && (
+                <div className="flex items-center gap-3">
+                   <button 
+                      onClick={toggleTheme}
+                      className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all mr-2"
+                      title="Toggle Theme"
+                   >
+                      {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                   </button>
+    
+                  {view === 'calculator' && (
+                      <>
+                       <button 
+                          onClick={() => handleExport('image')}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all font-bold text-sm uppercase"
+                       >
+                          <FileImage size={18} />
+                          Save IMG
+                       </button>
+                       <button 
+                          onClick={() => handleExport('pdf')}
+                          className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-emerald-600 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-emerald-700 transition-all shadow-lg font-bold text-sm uppercase"
+                       >
+                          <FileText size={18} />
+                          Save PDF
+                       </button>
+                      </>
+                  )}
+                </div>
+            )}
+
+            {/* Mini Theme Toggle for Collapsed State */}
+            {!isHeaderExpanded && (
                  <button 
-                    onClick={() => handleExport('image')}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all font-bold text-sm uppercase"
+                    onClick={toggleTheme}
+                    className="absolute top-2.5 right-12 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all"
                  >
-                    <FileImage size={18} />
-                    Save IMG
+                    {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
                  </button>
-                 <button 
-                    onClick={() => handleExport('pdf')}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-emerald-600 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-emerald-700 transition-all shadow-lg font-bold text-sm uppercase"
-                 >
-                    <FileText size={18} />
-                    Save PDF
-                 </button>
-                </>
             )}
           </div>
         </header>

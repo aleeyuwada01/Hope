@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TrackerState, DailyTradeData, CheckpointRow, PlanProgress, PlanStepResult } from '../types';
 import { saveTrackerData, getTrackerData, clearTrackerData } from '../services/storageService';
-import { ChevronLeft, ChevronRight, X, Trash2, ArrowLeft, PieChart, Target, ShieldAlert, DollarSign, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Trash2, ArrowLeft, PieChart, Target, ShieldAlert, DollarSign, List, FileImage } from 'lucide-react';
 import { formatCurrency } from '../services/calculationService';
+import html2canvas from 'html2canvas';
 
 interface TrackerProps {
   onBack: () => void;
@@ -23,6 +24,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
   const [data, setData] = useState<TrackerState>({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const trackerRef = useRef<HTMLDivElement>(null);
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,6 +105,26 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
             clearTrackerData();
             setData({});
         }
+    }
+  };
+
+  const handleExportImage = async () => {
+    if (!trackerRef.current) return;
+    
+    try {
+        const canvas = await html2canvas(trackerRef.current, {
+            scale: 2,
+            backgroundColor: document.documentElement.classList.contains('dark') ? '#0f172a' : '#f1f5f9', // slate-950/slate-100 match
+            useCORS: true,
+            ignoreElements: (element) => element.classList.contains('no-print')
+        });
+        
+        const link = document.createElement('a');
+        link.download = `tracker-${monthName}-${year}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (error) {
+        console.error("Failed to export image", error);
     }
   };
 
@@ -264,7 +286,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-right duration-500">
+    <div ref={trackerRef} className="animate-in fade-in slide-in-from-right duration-500 p-2 bg-slate-100 dark:bg-slate-950">
         
         {/* Interactive Challenge Panel */}
         {isInteractive && currentStepRow && (
@@ -279,7 +301,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                             <span className="px-3 py-1 bg-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-full animate-pulse">
                                 Active Challenge
                             </span>
-                            <button onClick={() => setIsPlanModalOpen(true)} className="text-indigo-300 hover:text-white text-xs font-bold uppercase flex items-center gap-1 transition-colors">
+                            <button onClick={() => setIsPlanModalOpen(true)} className="no-print text-indigo-300 hover:text-white text-xs font-bold uppercase flex items-center gap-1 transition-colors">
                                 <List size={14} /> View Full Plan
                             </button>
                         </div>
@@ -303,7 +325,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+                    <div className="no-print flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
                          <div className="text-right mr-2">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Log Result For</p>
                             <p className="text-white font-bold">
@@ -330,7 +352,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
         {/* Header */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-8 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
             <div className="flex items-center gap-4 mb-4 xl:mb-0">
-                <button onClick={onBack} className="p-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl transition-colors" title="Back to Calculator">
+                <button onClick={onBack} className="no-print p-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl transition-colors" title="Back to Calculator">
                     <ArrowLeft size={20} strokeWidth={3} />
                 </button>
                 
@@ -361,7 +383,14 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                     </span>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="no-print flex items-center gap-2">
+                    <button 
+                        onClick={handleExportImage}
+                        className="flex items-center gap-2 px-4 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                        title="Save as Image"
+                    >
+                        <FileImage size={18} />
+                    </button>
                     <button 
                         onClick={onViewStats}
                         className="flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold uppercase text-xs tracking-wider shadow-lg shadow-indigo-500/20 transition-all"
