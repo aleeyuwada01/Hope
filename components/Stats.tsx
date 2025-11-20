@@ -2,16 +2,13 @@
 import React, { useMemo } from 'react';
 import { getTrackerData } from '../services/storageService';
 import { ArrowLeft, TrendingUp, TrendingDown, Activity, Target, BarChart2 } from 'lucide-react';
-import { CurrencyCode } from '../types';
-import { formatCurrency } from '../services/calculationService';
 
 interface StatsProps {
   onBack: () => void;
   startBalance: number;
-  currency: CurrencyCode;
 }
 
-const Stats: React.FC<StatsProps> = ({ onBack, startBalance, currency }) => {
+const Stats: React.FC<StatsProps> = ({ onBack, startBalance }) => {
   const data = getTrackerData();
   
   const stats = useMemo(() => {
@@ -135,10 +132,10 @@ const Stats: React.FC<StatsProps> = ({ onBack, startBalance, currency }) => {
             
             {/* Labels */}
             <div className="absolute top-2 left-2 bg-slate-900/80 text-white text-xs px-2 py-1 rounded">
-                Max: {formatCurrency(max, currency)}
+                Max: ${max.toFixed(2)}
             </div>
             <div className="absolute bottom-2 left-2 bg-slate-900/80 text-white text-xs px-2 py-1 rounded">
-                Min: {formatCurrency(min, currency)}
+                Min: ${min.toFixed(2)}
             </div>
         </div>
     );
@@ -162,7 +159,7 @@ const Stats: React.FC<StatsProps> = ({ onBack, startBalance, currency }) => {
                     <Activity size={16} /> Net P/L
                 </div>
                 <div className={`text-4xl font-black ${stats.netPL >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                    {stats.netPL >= 0 ? '+' : ''}{formatCurrency(stats.netPL, currency)}
+                    {stats.netPL >= 0 ? '+' : ''}{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(stats.netPL)}
                 </div>
             </div>
 
@@ -195,10 +192,10 @@ const Stats: React.FC<StatsProps> = ({ onBack, startBalance, currency }) => {
                     <TrendingUp size={16} /> Avg Win Day
                 </div>
                 <div className="text-4xl font-black text-emerald-500">
-                    {formatCurrency(stats.avgWinDay, currency)}
+                    ${stats.avgWinDay.toFixed(0)}
                 </div>
                 <div className="text-xs font-bold text-red-400 mt-1">
-                    Avg Loss: {formatCurrency(Math.abs(stats.avgLossDay), currency)}
+                    Avg Loss: ${Math.abs(stats.avgLossDay).toFixed(0)}
                 </div>
             </div>
         </div>
@@ -214,14 +211,14 @@ const Stats: React.FC<StatsProps> = ({ onBack, startBalance, currency }) => {
             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div>
                     <p className="text-xs font-black text-slate-400 uppercase">Best Day</p>
-                    <p className="text-2xl font-black text-emerald-500">+{formatCurrency(stats.bestDay, currency)}</p>
+                    <p className="text-2xl font-black text-emerald-500">+${stats.bestDay.toFixed(2)}</p>
                 </div>
                 <TrendingUp className="text-emerald-500 opacity-20" size={48} />
             </div>
             <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <div>
                     <p className="text-xs font-black text-slate-400 uppercase">Worst Day</p>
-                    <p className="text-2xl font-black text-red-500">{formatCurrency(stats.worstDay, currency)}</p>
+                    <p className="text-2xl font-black text-red-500">${stats.worstDay.toFixed(2)}</p>
                 </div>
                 <TrendingDown className="text-red-500 opacity-20" size={48} />
             </div>

@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { CalculationSettings, CurrencyCode } from '../types';
-import { Settings2, TrendingUp, DollarSign, Percent, Hash, Zap, ToggleLeft, ToggleRight, RotateCcw, RefreshCw } from 'lucide-react';
-import { convertUSDToInput, convertInputToUSD } from '../services/calculationService';
+import { CalculationSettings } from '../types';
+import { Settings2, TrendingUp, DollarSign, Percent, Hash, Zap, ToggleLeft, ToggleRight, RotateCcw } from 'lucide-react';
 
 interface ControlPanelProps {
   settings: CalculationSettings;
@@ -11,74 +10,36 @@ interface ControlPanelProps {
   isInteractive: boolean;
   onToggleInteractive: () => void;
   onResetProgress: () => void;
-  currency: CurrencyCode;
-  onToggleCurrency: () => void;
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ 
-    settings, 
-    onUpdate, 
-    onConnect, 
-    isInteractive, 
-    onToggleInteractive, 
-    onResetProgress, 
-    currency,
-    onToggleCurrency
-}) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onUpdate, onConnect, isInteractive, onToggleInteractive, onResetProgress }) => {
   
   const handleChange = (key: keyof CalculationSettings, value: string) => {
     const numVal = parseFloat(value);
     if (!isNaN(numVal)) {
-      if (key === 'startAmount') {
-          onUpdate({ ...settings, [key]: convertInputToUSD(numVal, currency) });
-      } else {
-          onUpdate({ ...settings, [key]: numVal });
-      }
+      onUpdate({ ...settings, [key]: numVal });
     }
   };
 
-  // Display value for Start Amount based on currency
-  const displayStartAmount = convertUSDToInput(settings.startAmount, currency);
-
   return (
     <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 h-full transition-colors flex flex-col">
-      
-      <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-            <Settings2 size={24} strokeWidth={2.5} />
-            <h3 className="font-black text-xl uppercase tracking-wide text-slate-800 dark:text-white">Parameters</h3>
-          </div>
-          
-          {/* Currency Toggle inside Control Panel */}
-          <button 
-            onClick={onToggleCurrency}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-black uppercase border transition-all
-                ${currency === 'NGN' 
-                    ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400' 
-                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
-                }`}
-            title="Switch Currency"
-          >
-            <RefreshCw size={14} className={currency === 'NGN' ? 'animate-spin-slow' : ''} />
-            {currency}
-          </button>
+      <div className="flex items-center gap-2 mb-6 text-indigo-600 dark:text-indigo-400">
+        <Settings2 size={24} strokeWidth={2.5} />
+        <h3 className="font-black text-xl uppercase tracking-wide text-slate-800 dark:text-white">Parameters</h3>
       </div>
 
       <div className="space-y-6 flex-grow">
         {/* Start Balance */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
-            <DollarSign size={14} strokeWidth={3} /> Start Balance ({currency})
+            <DollarSign size={14} strokeWidth={3} /> Start Balance
           </label>
-          <div className="relative">
-              <span className="absolute left-3 top-3.5 text-slate-400 font-bold">{currency === 'USD' ? '$' : '₦'}</span>
-              <input
-                type="number"
-                value={displayStartAmount}
-                onChange={(e) => handleChange('startAmount', e.target.value)}
-                className="w-full pl-8 p-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-900 dark:text-white font-mono font-bold text-lg"
-              />
-          </div>
+          <input
+            type="number"
+            value={settings.startAmount}
+            onChange={(e) => handleChange('startAmount', e.target.value)}
+            className="w-full p-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-slate-900 dark:text-white font-mono font-bold text-lg"
+          />
         </div>
 
         {/* Risk Percentage */}
@@ -153,9 +114,8 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           
           {isInteractive && (
              <button 
-                type="button"
                 onClick={() => {
-                   if(confirm("FULL RESET: This will clear all your Progress and Calendar Data. This cannot be undone. Are you sure?")) {
+                   if(confirm("FULL RESET: This will clear all your Progress and Calendar Data. Are you sure?")) {
                        onResetProgress();
                    }
                 }}

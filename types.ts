@@ -1,6 +1,4 @@
 
-export type CurrencyCode = 'USD' | 'NGN';
-
 export interface CheckpointRow {
   id: number;
   amount: number;

@@ -1,5 +1,5 @@
 
-import { CalculationSettings, CheckpointRow, CurrencyCode } from '../types';
+import { CalculationSettings, CheckpointRow } from '../types';
 
 export const generateData = (settings: CalculationSettings): CheckpointRow[] => {
   const data: CheckpointRow[] = [];
@@ -33,24 +33,10 @@ export const generateData = (settings: CalculationSettings): CheckpointRow[] => 
   return data;
 };
 
-const EXCHANGE_RATE = 1500;
-
-export const formatCurrency = (val: number, currency: CurrencyCode = 'USD') => {
-  const amount = currency === 'NGN' ? val * EXCHANGE_RATE : val;
-  
-  return new Intl.NumberFormat('en-NG', {
+export const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency,
-    minimumFractionDigits: currency === 'NGN' ? 0 : 2, // Naira usually doesn't need decimals for large amounts
-    maximumFractionDigits: currency === 'NGN' ? 0 : 2,
-  }).format(amount);
-};
-
-// Helper to convert input value based on currency
-export const convertInputToUSD = (val: number, currency: CurrencyCode) => {
-    return currency === 'NGN' ? val / EXCHANGE_RATE : val;
-};
-
-export const convertUSDToInput = (val: number, currency: CurrencyCode) => {
-    return currency === 'NGN' ? val * EXCHANGE_RATE : val;
+    currency: 'USD',
+    minimumFractionDigits: 2
+  }).format(val);
 };

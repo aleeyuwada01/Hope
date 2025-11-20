@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { CheckpointRow, CalculationSettings, PlanProgress, CurrencyCode } from './types';
+import { CheckpointRow, CalculationSettings, PlanProgress } from './types';
 import { generateData } from './services/calculationService';
 import { saveTrackerData, getTrackerData, savePlanProgress, getPlanProgress, clearPlanProgress, clearTrackerData } from './services/storageService';
 import Spreadsheet from './components/Spreadsheet';
@@ -8,7 +8,7 @@ import ControlPanel from './components/ControlPanel';
 import Tracker from './components/Tracker';
 import Stats from './components/Stats';
 import { analyzePlan } from './services/geminiService';
-import { FileImage, FileText, Sparkles, Moon, Sun, RefreshCw } from 'lucide-react';
+import { FileImage, FileText, Sparkles, Moon, Sun } from 'lucide-react';
 
 // Explicitly declaring external libraries for TypeScript
 declare const html2canvas: any;
@@ -28,9 +28,6 @@ export default function App() {
     lotDivisor: 1000,   
     steps: 34
   });
-
-  // Currency State
-  const [currency, setCurrency] = useState<CurrencyCode>('USD');
 
   // Plan Interactive State
   const [isInteractive, setIsInteractive] = useState(false);
@@ -114,29 +111,23 @@ export default function App() {
     trackerData[dateKey] = newEntry;
     saveTrackerData(trackerData);
 
-    const displayAmount = currency === 'NGN' ? amount * 1500 : amount;
-    showNotification(`Journal Updated: ${type === 'WIN' ? '+' : ''}${currency === 'USD' ? '$' : '₦'}${Math.abs(displayAmount).toFixed(2)}`, type === 'WIN' ? 'success' : 'error');
+    showNotification(`Journal Updated: ${type === 'WIN' ? '+' : ''}$${amount.toFixed(2)}`, type === 'WIN' ? 'success' : 'error');
   };
 
   const performFullReset = () => {
-      console.log("Performing Full Reset...");
-      
-      // 1. Clear Local Storage completely
+      // 1. Clear Storage
       clearPlanProgress();
       clearTrackerData();
       
-      // 2. Create a fresh default object
+      // 2. Explicitly save default state to overwrite any lingering data
       const defaultProgress: PlanProgress = { currentStep: 1, history: {} };
-      const defaultTrackerData = {};
-
-      // 3. Explicitly save defaults to storage
       savePlanProgress(defaultProgress);
-      saveTrackerData(defaultTrackerData);
+      saveTrackerData({});
 
-      // 4. Update State (This triggers the UI update)
-      setPlanProgress({ ...defaultProgress });
+      // 3. Reset State
+      setPlanProgress(defaultProgress);
       
-      // 5. Increment Reset Key to Force Tracker Remount
+      // 4. Increment Reset Key to Force Tracker Remount
       setResetKey(prev => prev + 1);
 
       showNotification("All progress and data reset.", "success");
@@ -184,7 +175,6 @@ export default function App() {
   };
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
-  const toggleCurrency = () => setCurrency(prev => prev === 'USD' ? 'NGN' : 'USD');
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 p-4 md:p-8 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
@@ -213,16 +203,6 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-3">
-             {/* Currency Toggle Header */}
-             <button 
-                onClick={toggleCurrency}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-black text-sm uppercase transition-all mr-1 border border-slate-200 dark:border-slate-700"
-                title="Toggle Currency"
-             >
-                <RefreshCw size={16} className={currency === 'NGN' ? 'text-emerald-500' : 'text-slate-400'} />
-                {currency}
-             </button>
-
              <button 
                 onClick={toggleTheme}
                 className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all mr-2"
@@ -263,13 +243,11 @@ export default function App() {
                 isInteractive={isInteractive}
                 onRegisterResult={handleRegisterResult}
                 onReset={performFullReset}
-                currency={currency}
             />
         ) : view === 'stats' ? (
             <Stats 
                 onBack={() => setView('tracker')} 
                 startBalance={settings.startAmount}
-                currency={currency}
             />
         ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -284,8 +262,6 @@ export default function App() {
                             isInteractive={isInteractive}
                             onToggleInteractive={() => setIsInteractive(!isInteractive)}
                             onResetProgress={performFullReset}
-                            currency={currency}
-                            onToggleCurrency={toggleCurrency}
                         />
                         
                         {/* AI Analysis Card */}
@@ -334,7 +310,6 @@ export default function App() {
                                     isInteractive={isInteractive}
                                     planProgress={planProgress}
                                     onRegisterResult={(id, type, amount) => handleRegisterResult(id, type, amount)} // Default to today
-                                    currency={currency}
                                  />
                             </div>
                         </div>
@@ -344,23 +319,13 @@ export default function App() {
                         <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-100 dark:border-emerald-800 p-5 rounded-xl">
                             <p className="text-emerald-700 dark:text-emerald-400 text-xs font-black uppercase tracking-widest mb-1">Total Profit</p>
                             <p className="text-3xl font-black text-emerald-900 dark:text-emerald-300 tracking-tight">
-                                {new Intl.NumberFormat('en-US', { 
-                                    style: 'currency', 
-                                    currency: currency,
-                                    minimumFractionDigits: currency === 'NGN' ? 0 : 2,
-                                    maximumFractionDigits: currency === 'NGN' ? 0 : 2
-                                }).format(currency === 'NGN' ? (data[data.length - 1].total - settings.startAmount) * 1500 : (data[data.length - 1].total - settings.startAmount))}
+                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data[data.length - 1].total - settings.startAmount)}
                             </p>
                         </div>
                         <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-100 dark:border-blue-800 p-5 rounded-xl">
                             <p className="text-blue-700 dark:text-blue-400 text-xs font-black uppercase tracking-widest mb-1">Final Balance</p>
                             <p className="text-3xl font-black text-blue-900 dark:text-blue-300 tracking-tight">
-                                 {new Intl.NumberFormat('en-US', { 
-                                     style: 'currency', 
-                                     currency: currency,
-                                     minimumFractionDigits: currency === 'NGN' ? 0 : 2,
-                                     maximumFractionDigits: currency === 'NGN' ? 0 : 2
-                                 }).format(currency === 'NGN' ? data[data.length - 1].total * 1500 : data[data.length - 1].total)}
+                                 {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data[data.length - 1].total)}
                             </p>
                         </div>
                         <div className="bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-100 dark:border-purple-800 p-5 rounded-xl">

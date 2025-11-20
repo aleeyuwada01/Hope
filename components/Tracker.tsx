@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { TrackerState, DailyTradeData, CheckpointRow, PlanProgress, PlanStepResult, CurrencyCode } from '../types';
+import { TrackerState, DailyTradeData, CheckpointRow, PlanProgress, PlanStepResult } from '../types';
 import { saveTrackerData, getTrackerData, clearTrackerData } from '../services/storageService';
 import { ChevronLeft, ChevronRight, X, Trash2, ArrowLeft, PieChart, Target, ShieldAlert, DollarSign, List } from 'lucide-react';
-import { formatCurrency, convertInputToUSD, convertUSDToInput } from '../services/calculationService';
+import { formatCurrency } from '../services/calculationService';
 
 interface TrackerProps {
   onBack: () => void;
@@ -13,14 +13,13 @@ interface TrackerProps {
   isInteractive?: boolean;
   onRegisterResult?: (stepId: number, result: 'WIN' | 'LOSS', amount: number, date: string) => void;
   onReset?: () => void;
-  currency: CurrencyCode;
 }
 
 // Helper to get days in month
 const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
-const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planProgress, isInteractive, onRegisterResult, onReset, currency }) => {
+const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planProgress, isInteractive, onRegisterResult, onReset }) => {
   const [data, setData] = useState<TrackerState>({});
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -55,12 +54,8 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
     const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(dateKey);
     const existing = data[dateKey];
-    
-    // Convert stored USD Profit to Display Currency for edit form
-    const displayProfit = existing ? convertUSDToInput(existing.profit, currency) : '';
-
     setEditForm({
-      profit: existing ? displayProfit.toString() : '',
+      profit: existing ? existing.profit.toString() : '',
       trades: existing ? existing.trades.toString() : '',
       wins: existing ? existing.wins.toString() : ''
     });
@@ -73,14 +68,11 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
   const handleSave = () => {
     if (!selectedDate) return;
     
-    const profitInput = parseFloat(editForm.profit);
+    const profit = parseFloat(editForm.profit);
     const trades = parseInt(editForm.trades) || 0;
     const wins = parseInt(editForm.wins) || 0;
 
-    if (isNaN(profitInput) && editForm.profit !== '') return; // Basic validation
-
-    // Convert Input (Display Currency) back to USD for storage
-    const profitUSD = convertInputToUSD(profitInput, currency);
+    if (isNaN(profit) && editForm.profit !== '') return; // Basic validation
 
     const newData = { ...data };
 
@@ -89,7 +81,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
     } else {
         newData[selectedDate] = {
             date: selectedDate,
-            profit: isNaN(profitUSD) ? 0 : profitUSD,
+            profit: isNaN(profit) ? 0 : profit,
             trades: trades,
             wins: wins
         };
@@ -101,19 +93,16 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
   };
 
   const handleClearAll = () => {
-    // If Interactive Mode is on and reset handler is provided, use the Global Reset
     if (isInteractive && onReset) {
         if (confirm("FULL RESET: This will clear your Plan Progress AND Calendar Data. Are you sure?")) {
-            onReset(); // Calls App.performFullReset which clears storage
-            setData({}); // Immediately clear local view
+            onReset(); // Calls App.performFullReset
+            setData({}); // Immediately clear local view to prevent ghost data
         }
-        return;
-    } 
-    
-    // Fallback for manual mode
-    if (confirm('Are you sure you want to clear all tracker history? This cannot be undone.')) {
-        clearTrackerData();
-        setData({});
+    } else {
+        if (confirm('Are you sure you want to clear all tracker history? This cannot be undone.')) {
+            clearTrackerData();
+            setData({});
+        }
     }
   };
 
@@ -180,7 +169,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
       const isSelected = dateKey === selectedDate;
 
       if (entry) {
-          weekData.profit += entry.profit; // Keep profit in USD for summation
+          weekData.profit += entry.profit;
           weekData.days += 1;
       }
 
@@ -208,9 +197,6 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
           cardClass += " ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-900";
       }
 
-      // Formatting for display
-      const displayProfit = entry ? formatCurrency(Math.abs(entry.profit), currency).replace(/[$₦]/, '') : '';
-
       currentWeekRow.push(
         <div 
             key={i} 
@@ -230,7 +216,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                 {entry && (
                     <div className="flex flex-col items-end text-right">
                         <span className={`text-lg font-black tracking-tight leading-none ${profitClass}`}>
-                            {entry.profit >= 0 ? (currency === 'USD' ? '$' : '₦') : '-'}{displayProfit}
+                            {entry.profit >= 0 ? '$' : '-'}{Math.abs(entry.profit).toFixed(1).replace(/\.0$/, '')}
                         </span>
                         <span className="text-[10px] font-bold opacity-70 mt-1">{entry.trades} trd</span>
                     </div>
@@ -245,9 +231,6 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
          const weekNum = Math.ceil((i+1)/7);
          const hasActivity = weekData.days > 0;
 
-         // Format Weekly Profit
-         const displayWeekProfit = formatCurrency(Math.abs(weekData.profit), currency).replace(/[$₦]/, '');
-
          grid.push(
             <div key={`row-${i}`} className="grid grid-cols-8 gap-2 lg:gap-4 mb-4">
                 {currentWeekRow}
@@ -258,7 +241,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                     {hasActivity ? (
                         <>
                             <span className={`text-xl lg:text-2xl font-black ${isPositiveWeek ? 'text-emerald-400' : 'text-red-400'}`}>
-                                {weekData.profit >= 0 ? (currency === 'USD' ? '$' : '₦') : '-'}{displayWeekProfit}
+                                {weekData.profit >= 0 ? '$' : '-'}{Math.abs(weekData.profit).toFixed(0)}
                             </span>
                         </>
                     ) : (
@@ -311,11 +294,11 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                         <div className="flex items-center gap-6 mt-4 text-sm font-bold text-slate-300">
                              <div className="flex items-center gap-2">
                                 <Target size={16} className="text-emerald-400" />
-                                Target: <span className="text-emerald-400 text-lg">{formatCurrency(currentStepRow.profit, currency)}</span>
+                                Target: <span className="text-emerald-400 text-lg">${currentStepRow.profit}</span>
                              </div>
                              <div className="flex items-center gap-2">
                                 <ShieldAlert size={16} className="text-red-400" />
-                                Risk: <span className="text-red-400 text-lg">-{formatCurrency(currentStepRow.riskAmount, currency)}</span>
+                                Risk: <span className="text-red-400 text-lg">-${currentStepRow.riskAmount}</span>
                              </div>
                         </div>
                     </div>
@@ -374,7 +357,7 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                 <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-slate-400 text-xs font-black uppercase ml-2">Mo. P/L:</span>
                     <span className={`text-xl font-black px-3 py-1 rounded-lg ${monthlyProfit >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
-                        {formatCurrency(monthlyProfit, currency).split('.')[0]}
+                        ${monthlyProfit.toFixed(0)}
                     </span>
                 </div>
                 
@@ -419,13 +402,13 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                     
                     <div className="p-6 space-y-6">
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Net Profit/Loss ({currency})</label>
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Net Profit/Loss ($)</label>
                             <input 
                                 type="number" 
                                 value={editForm.profit}
                                 onChange={(e) => setEditForm({...editForm, profit: e.target.value})}
                                 className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 text-2xl font-black text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-0 outline-none transition-all"
-                                placeholder="0"
+                                placeholder="0.00"
                                 autoFocus
                             />
                         </div>
@@ -501,8 +484,8 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                                     return (
                                         <tr key={row.id} className={`border-b border-slate-100 dark:border-slate-800 ${isCurrent ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''}`}>
                                             <td className="py-3 font-bold text-slate-700 dark:text-slate-300">#{row.id}</td>
-                                            <td className="py-3 font-mono text-emerald-600 font-bold">{formatCurrency(row.profit, currency)}</td>
-                                            <td className="py-3 font-mono text-red-500 font-bold">-{formatCurrency(row.riskAmount, currency)}</td>
+                                            <td className="py-3 font-mono text-emerald-600 font-bold">${row.profit}</td>
+                                            <td className="py-3 font-mono text-red-500 font-bold">-${row.riskAmount}</td>
                                             <td className="py-3">
                                                 {history ? (
                                                     <span className={`text-xs font-bold px-2 py-1 rounded uppercase ${history.status === 'WIN' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
