@@ -1,14 +1,14 @@
-
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { CheckpointRow, CalculationSettings, PlanProgress } from './types';
 import { generateData } from './services/calculationService';
 import { saveTrackerData, getTrackerData, savePlanProgress, getPlanProgress, clearPlanProgress, clearTrackerData } from './services/storageService';
+import { analyzePlan } from './services/geminiService';
 import Spreadsheet from './components/Spreadsheet';
 import ControlPanel from './components/ControlPanel';
 import Tracker from './components/Tracker';
 import Stats from './components/Stats';
-import { analyzePlan } from './services/geminiService';
-import { FileImage, FileText, Sparkles, Moon, Sun, ChevronUp, ChevronDown } from 'lucide-react';
+import { FileImage, FileText, Moon, Sun, ChevronUp, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -46,6 +46,10 @@ export default function App() {
   // Header State
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(true);
 
+  // AI Analysis State
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+
   // Collapse header by default when on tracker view
   useEffect(() => {
     if (view === 'tracker') {
@@ -63,9 +67,6 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
-
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiInsight, setAiInsight] = useState<string | null>(null);
   
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -136,11 +137,26 @@ export default function App() {
 
       // 3. Reset State
       setPlanProgress(defaultProgress);
+      setAiInsight(null); // Clear AI insight on reset
       
       // 4. Increment Reset Key to Force Tracker Remount
       setResetKey(prev => prev + 1);
 
       showNotification("All progress and data reset.", "success");
+  };
+
+  // AI Logic
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    setAiInsight(null);
+    try {
+      const result = await analyzePlan(data, settings.riskPercentage, settings.rewardRatio);
+      setAiInsight(result);
+    } catch (e) {
+      setAiInsight("Could not generate analysis. Please check your API Key.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   // Export Logic
@@ -175,23 +191,10 @@ export default function App() {
     }
   };
 
-  const handleAnalyze = async () => {
-    setIsAnalyzing(true);
-    setAiInsight(null);
-    try {
-        const result = await analyzePlan(data, settings.riskPercentage, settings.rewardRatio);
-        setAiInsight(result);
-    } catch (e) {
-        setAiInsight("Could not complete analysis.");
-    } finally {
-        setIsAnalyzing(false);
-    }
-  };
-
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 p-4 md:p-8 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 p-2 md:p-4 lg:p-8 font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
       
       {/* Toast Notification */}
       {notification && (
@@ -203,10 +206,10 @@ export default function App() {
           </div>
       )}
 
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         
         {/* Header Section */}
-        <header className={`relative bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out overflow-hidden ${isHeaderExpanded ? 'p-6' : 'p-3'}`}>
+        <header className={`relative bg-white dark:bg-slate-900 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 transition-all duration-300 ease-in-out overflow-hidden ${isHeaderExpanded ? 'p-4 md:p-6' : 'p-3'}`}>
           
           <button 
             onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
@@ -219,7 +222,7 @@ export default function App() {
           <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 transition-opacity duration-300 ${isHeaderExpanded ? 'opacity-100' : 'opacity-100'}`}>
             <div className="flex items-center gap-4">
                  <div className={`transition-all duration-300 ${!isHeaderExpanded ? 'scale-90 origin-left' : ''}`}>
-                    <h1 className={`${isHeaderExpanded ? 'text-4xl' : 'text-xl'} font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 uppercase tracking-tight transition-all`}>
+                    <h1 className={`${isHeaderExpanded ? 'text-3xl md:text-4xl' : 'text-xl'} font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 uppercase tracking-tight transition-all`}>
                       Compound Growth
                     </h1>
                     {isHeaderExpanded && (
@@ -232,7 +235,7 @@ export default function App() {
             
             {/* Controls Section */}
             {isHeaderExpanded && (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                    <button 
                       onClick={toggleTheme}
                       className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all mr-2"
@@ -245,17 +248,19 @@ export default function App() {
                       <>
                        <button 
                           onClick={() => handleExport('image')}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all font-bold text-sm uppercase"
+                          className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-all font-bold text-xs md:text-sm uppercase"
                        >
                           <FileImage size={18} />
-                          Save IMG
+                          <span className="hidden md:inline">Save IMG</span>
+                          <span className="md:hidden">IMG</span>
                        </button>
                        <button 
                           onClick={() => handleExport('pdf')}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 dark:bg-emerald-600 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-emerald-700 transition-all shadow-lg font-bold text-sm uppercase"
+                          className="flex items-center gap-2 px-4 md:px-5 py-2.5 bg-slate-900 dark:bg-emerald-600 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-emerald-700 transition-all shadow-lg font-bold text-xs md:text-sm uppercase"
                        >
                           <FileText size={18} />
-                          Save PDF
+                          <span className="hidden md:inline">Save PDF</span>
+                          <span className="md:hidden">PDF</span>
                        </button>
                       </>
                   )}
@@ -292,60 +297,67 @@ export default function App() {
                 startBalance={settings.startAmount}
             />
         ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
                 
-                {/* Sidebar Controls */}
-                <div className="lg:col-span-3">
-                    <div className="sticky top-6 space-y-6">
-                        <ControlPanel 
-                            settings={settings} 
-                            onUpdate={setSettings} 
-                            onConnect={() => setView('tracker')}
-                            isInteractive={isInteractive}
-                            onToggleInteractive={() => setIsInteractive(!isInteractive)}
-                            onResetProgress={performFullReset}
-                        />
-                        
-                        {/* AI Analysis Card */}
-                        <div className="bg-gradient-to-br from-indigo-600 to-purple-800 dark:from-indigo-900 dark:to-purple-950 rounded-xl p-6 text-white shadow-xl border border-indigo-400/30">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Sparkles className="text-yellow-300" size={24} strokeWidth={2.5} />
-                                <h3 className="font-black text-lg uppercase tracking-wide">AI Analysis</h3>
-                            </div>
-                            <p className="text-indigo-100 text-sm mb-4 font-medium leading-relaxed opacity-90">
-                                Evaluate the feasibility and psychological pressure of this plan.
-                            </p>
-                            
-                            {!aiInsight && (
-                                <button 
-                                    onClick={handleAnalyze}
-                                    disabled={isAnalyzing}
-                                    className="w-full py-3 px-4 bg-white/10 hover:bg-white/20 border-2 border-white/20 rounded-lg text-sm font-bold uppercase tracking-wider transition-all flex justify-center items-center gap-2"
-                                >
-                                    {isAnalyzing ? 'Thinking...' : 'Analyze Plan'}
-                                </button>
-                            )}
+                {/* Sidebar Controls - REMOVED STICKY to prevent overlap */}
+                <div className="lg:col-span-3 space-y-6 relative z-0">
+                    <ControlPanel 
+                        settings={settings} 
+                        onUpdate={setSettings} 
+                        onConnect={() => setView('tracker')}
+                        isInteractive={isInteractive}
+                        onToggleInteractive={() => setIsInteractive(!isInteractive)}
+                        onResetProgress={performFullReset}
+                    />
 
-                            {aiInsight && (
-                                <div className="mt-4 bg-black/20 p-4 rounded-lg text-sm text-indigo-50 border border-white/10 animate-in fade-in slide-in-from-bottom-2 duration-500 font-medium">
-                                    <p>{aiInsight}</p>
-                                    <button 
-                                        onClick={() => setAiInsight(null)} 
-                                        className="text-xs text-indigo-300 mt-3 hover:text-white font-bold uppercase underline decoration-2"
-                                    >
-                                        Reset Analysis
-                                    </button>
-                                </div>
-                            )}
+                    {/* AI Analysis Card */}
+                    <div className="bg-white dark:bg-slate-900 p-4 md:p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 transition-colors mb-6">
+                        <div className="flex items-center gap-2 mb-4 text-purple-600 dark:text-purple-400">
+                            <Sparkles size={24} strokeWidth={2.5} />
+                            <h3 className="font-black text-xl uppercase tracking-wide text-slate-800 dark:text-white">AI Analysis</h3>
                         </div>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+                            Evaluate the feasibility and psychological pressure of this plan.
+                        </p>
+                        
+                        {!aiInsight && (
+                            <button 
+                                onClick={handleAnalyze}
+                                disabled={isAnalyzing}
+                                className="w-full py-3 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-lg font-bold uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isAnalyzing ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Thinking...
+                                    </>
+                                ) : (
+                                    <>Analyze Plan</>
+                                )}
+                            </button>
+                        )}
+
+                        {aiInsight && (
+                            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-950/50 rounded-lg border border-slate-100 dark:border-slate-800">
+                                <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed max-h-60 overflow-y-auto custom-scrollbar">
+                                    {aiInsight}
+                                </p>
+                                <button 
+                                    onClick={() => setAiInsight(null)}
+                                    className="mt-2 text-[10px] font-bold uppercase text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                >
+                                    Clear Analysis
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Main Content - Spreadsheet */}
-                <div className="lg:col-span-9">
+                <div className="lg:col-span-9 relative z-0">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-1 overflow-hidden transition-colors">
                         <div className="overflow-x-auto">
-                            <div className="min-w-[600px] p-6">
+                            <div className="min-w-[600px] md:min-w-0 p-2 md:p-6">
                                  <Spreadsheet 
                                     data={data} 
                                     ref={tableRef}

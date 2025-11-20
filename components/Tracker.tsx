@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TrackerState, DailyTradeData, CheckpointRow, PlanProgress, PlanStepResult } from '../types';
 import { saveTrackerData, getTrackerData, clearTrackerData } from '../services/storageService';
 import { ChevronLeft, ChevronRight, X, Trash2, ArrowLeft, PieChart, Target, ShieldAlert, DollarSign, List, FileImage } from 'lucide-react';
@@ -164,13 +164,13 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
     
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const headerRow = (
-        <div key="header" className="grid grid-cols-8 gap-2 lg:gap-4 mb-4">
+        <div key="header" className="grid grid-cols-8 gap-1 md:gap-2 lg:gap-4 mb-2 md:mb-4">
             {weekDays.map(d => (
-                <div key={d} className="text-center font-bold text-slate-500 dark:text-slate-400 uppercase text-xs lg:text-sm py-2 bg-slate-900/5 dark:bg-slate-800/50 rounded-lg">
+                <div key={d} className="text-center font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] md:text-xs lg:text-sm py-2 bg-slate-900/5 dark:bg-slate-800/50 rounded-lg">
                     {d}
                 </div>
             ))}
-            <div className="text-center font-bold text-slate-500 dark:text-slate-400 uppercase text-xs lg:text-sm py-2 bg-slate-900/5 dark:bg-slate-800/50 rounded-lg">
+            <div className="text-center font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] md:text-xs lg:text-sm py-2 bg-slate-900/5 dark:bg-slate-800/50 rounded-lg">
                 Week
             </div>
         </div>
@@ -223,24 +223,24 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
         <div 
             key={i} 
             onClick={() => isCurrentMonth && handleDayClick(dayNum)}
-            className={`relative p-2 lg:p-3 h-28 lg:h-32 rounded-xl border-2 transition-all flex flex-col justify-between group ${cardClass}`}
+            className={`relative p-1 md:p-2 lg:p-3 h-24 md:h-28 lg:h-32 rounded-xl border-2 transition-all flex flex-col justify-between group ${cardClass}`}
         >
           {isCurrentMonth && (
               <>
                 <div className="flex justify-between items-start">
-                    <span className={`text-sm font-bold ${entry ? 'text-inherit' : 'text-slate-400'}`}>{dayNum}</span>
+                    <span className={`text-xs md:text-sm font-bold ${entry ? 'text-inherit' : 'text-slate-400'}`}>{dayNum}</span>
                     {stepId && (
-                        <span className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded ${stepStatus === 'WIN' ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-100' : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-100'}`}>
+                        <span className={`text-[8px] md:text-[10px] font-black uppercase px-1 md:px-1.5 py-0.5 rounded ${stepStatus === 'WIN' ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-100' : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-100'}`}>
                             S{stepId}
                         </span>
                     )}
                 </div>
                 {entry && (
                     <div className="flex flex-col items-end text-right">
-                        <span className={`text-lg font-black tracking-tight leading-none ${profitClass}`}>
+                        <span className={`text-sm md:text-lg font-black tracking-tight leading-none ${profitClass}`}>
                             {entry.profit >= 0 ? '$' : '-'}{Math.abs(entry.profit).toFixed(1).replace(/\.0$/, '')}
                         </span>
-                        <span className="text-[10px] font-bold opacity-70 mt-1">{entry.trades} trd</span>
+                        <span className="text-[8px] md:text-[10px] font-bold opacity-70 mt-0.5 md:mt-1">{entry.trades} trd</span>
                     </div>
                 )}
               </>
@@ -254,15 +254,15 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
          const hasActivity = weekData.days > 0;
 
          grid.push(
-            <div key={`row-${i}`} className="grid grid-cols-8 gap-2 lg:gap-4 mb-4">
+            <div key={`row-${i}`} className="grid grid-cols-8 gap-1 md:gap-2 lg:gap-4 mb-2 md:mb-4">
                 {currentWeekRow}
-                <div className={`h-28 lg:h-32 rounded-xl border-2 flex flex-col justify-center items-center gap-1 transition-colors ${hasActivity 
+                <div className={`h-24 md:h-28 lg:h-32 rounded-xl border-2 flex flex-col justify-center items-center gap-1 transition-colors ${hasActivity 
                     ? 'bg-slate-800 border-slate-600 shadow-xl' 
                     : 'bg-slate-100 dark:bg-slate-900 border-dashed border-slate-200 dark:border-slate-800 opacity-50'}`}>
-                    <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Week {weekNum}</span>
+                    <span className="text-[8px] md:text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">W{weekNum}</span>
                     {hasActivity ? (
                         <>
-                            <span className={`text-xl lg:text-2xl font-black ${isPositiveWeek ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <span className={`text-sm md:text-xl lg:text-2xl font-black ${isPositiveWeek ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {weekData.profit >= 0 ? '$' : '-'}{Math.abs(weekData.profit).toFixed(0)}
                             </span>
                         </>
@@ -290,15 +290,15 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
         
         {/* Interactive Challenge Panel */}
         {isInteractive && currentStepRow && (
-             <div className="mb-6 bg-gradient-to-r from-slate-900 to-indigo-950 dark:from-slate-800 dark:to-indigo-900 p-6 rounded-2xl shadow-2xl border border-indigo-500/30 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 opacity-10 text-white">
+             <div className="mb-4 md:mb-6 bg-gradient-to-r from-slate-900 to-indigo-950 dark:from-slate-800 dark:to-indigo-900 p-4 md:p-6 rounded-2xl shadow-2xl border border-indigo-500/30 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-10 text-white pointer-events-none">
                     <Target size={120} />
                 </div>
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 relative z-10">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <span className="px-3 py-1 bg-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-full animate-pulse">
+                            <span className="px-3 py-1 bg-indigo-500 text-white text-[10px] md:text-xs font-black uppercase tracking-widest rounded-full animate-pulse">
                                 Active Challenge
                             </span>
                             <button onClick={() => setIsPlanModalOpen(true)} className="no-print text-indigo-300 hover:text-white text-xs font-bold uppercase flex items-center gap-1 transition-colors">
@@ -306,94 +306,98 @@ const Tracker: React.FC<TrackerProps> = ({ onBack, onViewStats, planData, planPr
                             </button>
                         </div>
                         <div className="flex items-baseline gap-4">
-                            <h2 className="text-4xl font-black text-white tracking-tight">
+                            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight">
                                 Step {currentStepRow.id}
                             </h2>
-                            <span className="text-indigo-300 font-mono text-lg font-bold">
+                            <span className="text-indigo-300 font-mono text-base md:text-lg font-bold">
                                 Lot: {currentStepRow.lotSize}
                             </span>
                         </div>
-                        <div className="flex items-center gap-6 mt-4 text-sm font-bold text-slate-300">
+                        <div className="flex flex-wrap items-center gap-3 md:gap-6 mt-4 text-xs md:text-sm font-bold text-slate-300">
                              <div className="flex items-center gap-2">
                                 <Target size={16} className="text-emerald-400" />
-                                Target: <span className="text-emerald-400 text-lg">${currentStepRow.profit}</span>
+                                Target: <span className="text-emerald-400 text-base md:text-lg">${currentStepRow.profit}</span>
                              </div>
                              <div className="flex items-center gap-2">
                                 <ShieldAlert size={16} className="text-red-400" />
-                                Risk: <span className="text-red-400 text-lg">-${currentStepRow.riskAmount}</span>
+                                Risk: <span className="text-red-400 text-base md:text-lg">-${currentStepRow.riskAmount}</span>
                              </div>
                         </div>
                     </div>
 
-                    <div className="no-print flex items-center gap-3 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-                         <div className="text-right mr-2">
+                    <div className="no-print flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-white/5 p-3 md:p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+                         <div className="text-left md:text-right md:mr-2 flex md:block justify-between items-center">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Log Result For</p>
-                            <p className="text-white font-bold">
+                            <p className="text-white font-bold text-sm">
                                 {selectedDate ? new Date(selectedDate).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : 'Select Date'}
                             </p>
                          </div>
-                         <button 
-                            onClick={() => handleInteractiveAction('WIN')}
-                            className="px-6 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black uppercase shadow-lg shadow-emerald-500/20 active:scale-95 transition-all w-24"
-                         >
-                            WIN
-                         </button>
-                         <button 
-                            onClick={() => handleInteractiveAction('LOSS')}
-                            className="px-6 py-4 bg-red-500 hover:bg-red-400 text-white rounded-xl font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all w-24"
-                         >
-                            LOSS
-                         </button>
+                         <div className="flex gap-2">
+                            <button 
+                                onClick={() => handleInteractiveAction('WIN')}
+                                className="flex-1 px-4 md:px-6 py-3 md:py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black uppercase shadow-lg shadow-emerald-500/20 active:scale-95 transition-all md:w-24 text-sm md:text-base"
+                            >
+                                WIN
+                            </button>
+                            <button 
+                                onClick={() => handleInteractiveAction('LOSS')}
+                                className="flex-1 px-4 md:px-6 py-3 md:py-4 bg-red-500 hover:bg-red-400 text-white rounded-xl font-black uppercase shadow-lg shadow-red-500/20 active:scale-95 transition-all md:w-24 text-sm md:text-base"
+                            >
+                                LOSS
+                            </button>
+                         </div>
                     </div>
                 </div>
              </div>
         )}
 
         {/* Header */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-8 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
-            <div className="flex items-center gap-4 mb-4 xl:mb-0">
-                <button onClick={onBack} className="no-print p-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl transition-colors" title="Back to Calculator">
-                    <ArrowLeft size={20} strokeWidth={3} />
-                </button>
-                
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
-                    <button onClick={handlePrevMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors">
-                        <ChevronLeft size={20} />
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-4 md:mb-8 bg-white dark:bg-slate-900 p-3 md:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-4 xl:mb-0 w-full xl:w-auto">
+                <div className="flex items-center w-full md:w-auto gap-4">
+                    <button onClick={onBack} className="no-print p-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white rounded-xl transition-colors shrink-0" title="Back to Calculator">
+                        <ArrowLeft size={20} strokeWidth={3} />
                     </button>
-                    <h2 className="text-xl font-black text-slate-800 dark:text-white w-40 text-center uppercase tracking-wide">{monthName} {year}</h2>
-                    <button onClick={handleNextMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors">
-                        <ChevronRight size={20} />
-                    </button>
+                    
+                    <div className="flex flex-grow md:flex-grow-0 items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                        <button onClick={handlePrevMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors">
+                            <ChevronLeft size={20} />
+                        </button>
+                        <h2 className="text-base md:text-xl font-black text-slate-800 dark:text-white w-28 md:w-40 text-center uppercase tracking-wide truncate">{monthName} {year}</h2>
+                        <button onClick={handleNextMonth} className="p-2 hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors">
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
                 </div>
                 
                 <button onClick={() => {
                     const now = new Date();
                     setCurrentDate(now);
                     setSelectedDate(`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`);
-                }} className="hidden md:block px-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors">
+                }} className="w-full md:w-auto px-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 uppercase rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors">
                     Today
                 </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 xl:gap-6">
-                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 xl:gap-6 w-full xl:w-auto">
+                <div className="flex-grow md:flex-grow-0 flex items-center justify-between md:justify-start gap-3 bg-slate-50 dark:bg-slate-950/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-slate-400 text-xs font-black uppercase ml-2">Mo. P/L:</span>
-                    <span className={`text-xl font-black px-3 py-1 rounded-lg ${monthlyProfit >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
+                    <span className={`text-lg md:text-xl font-black px-3 py-1 rounded-lg ${monthlyProfit >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400'}`}>
                         ${monthlyProfit.toFixed(0)}
                     </span>
                 </div>
                 
-                <div className="no-print flex items-center gap-2">
+                <div className="no-print flex items-center gap-2 w-full md:w-auto justify-end">
                     <button 
                         onClick={handleExportImage}
-                        className="flex items-center gap-2 px-4 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
+                        className="flex items-center justify-center gap-2 px-3 py-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl font-bold uppercase text-xs tracking-wider transition-all"
                         title="Save as Image"
                     >
                         <FileImage size={18} />
                     </button>
                     <button 
                         onClick={onViewStats}
-                        className="flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold uppercase text-xs tracking-wider shadow-lg shadow-indigo-500/20 transition-all"
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold uppercase text-xs tracking-wider shadow-lg shadow-indigo-500/20 transition-all"
                     >
                         <PieChart size={18} />
                         Stats

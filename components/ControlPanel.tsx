@@ -1,5 +1,4 @@
-
-import React from 'react';
+import * as React from 'react';
 import { CalculationSettings } from '../types';
 import { Settings2, TrendingUp, DollarSign, Percent, Hash, Zap, ToggleLeft, ToggleRight, RotateCcw } from 'lucide-react';
 
@@ -22,13 +21,13 @@ const ControlPanel: React.FC<ControlPanelProps> = ({ settings, onUpdate, onConne
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 h-full transition-colors flex flex-col">
-      <div className="flex items-center gap-2 mb-6 text-indigo-600 dark:text-indigo-400">
+    <div className="bg-white dark:bg-slate-900 p-4 md:p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 transition-colors flex flex-col">
+      <div className="flex items-center gap-2 mb-4 md:mb-6 text-indigo-600 dark:text-indigo-400">
         <Settings2 size={24} strokeWidth={2.5} />
         <h3 className="font-black text-xl uppercase tracking-wide text-slate-800 dark:text-white">Parameters</h3>
       </div>
 
-      <div className="space-y-6 flex-grow">
+      <div className="space-y-4 md:space-y-6 flex-grow">
         {/* Start Balance */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
