@@ -1,5 +1,9 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { CheckpointRow } from "../types";
+
+// Declare process to avoid TypeScript errors in browser environment
+declare const process: any;
 
 export const analyzePlan = async (data: CheckpointRow[], risk: number, reward: number) => {
   if (!process.env.API_KEY) {

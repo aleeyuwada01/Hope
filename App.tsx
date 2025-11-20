@@ -9,10 +9,8 @@ import Tracker from './components/Tracker';
 import Stats from './components/Stats';
 import { analyzePlan } from './services/geminiService';
 import { FileImage, FileText, Sparkles, Moon, Sun } from 'lucide-react';
-
-// Explicitly declaring external libraries for TypeScript
-declare const html2canvas: any;
-declare const jspdf: any;
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 type ViewState = 'calculator' | 'tracker' | 'stats';
 
@@ -149,7 +147,6 @@ export default function App() {
         link.href = canvas.toDataURL('image/png');
         link.click();
     } else {
-        const { jsPDF } = jspdf;
         const doc = new jsPDF({
             orientation: 'p',
             unit: 'mm',
