@@ -5,12 +5,15 @@ import { CheckpointRow } from "../types";
 // Declare process to avoid TypeScript errors in browser environment
 declare const process: any;
 
-export const analyzePlan = async (data: CheckpointRow[], risk: number, reward: number) => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key missing");
+export const analyzePlan = async (data: CheckpointRow[], risk: number, reward: number): Promise<string> => {
+  // Safe check for API Key
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.warn("API Key is missing");
+    return "API Key is missing. Please configure it in your environment variables.";
   }
 
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey });
   
   // Summarize data to avoid token limits if table is huge
   const start = data[0];
@@ -36,7 +39,8 @@ export const analyzePlan = async (data: CheckpointRow[], risk: number, reward: n
       model: 'gemini-2.5-flash',
       contents: prompt,
     });
-    return response.text;
+    // Ensure we always return a string, even if response.text is undefined
+    return response.text ?? "No analysis generated.";
   } catch (error) {
     console.error("Gemini Analysis Failed", error);
     return "Could not generate analysis at this time.";

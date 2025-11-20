@@ -166,9 +166,14 @@ export default function App() {
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setAiInsight(null);
-    const result = await analyzePlan(data, settings.riskPercentage, settings.rewardRatio);
-    setAiInsight(result);
-    setIsAnalyzing(false);
+    try {
+        const result = await analyzePlan(data, settings.riskPercentage, settings.rewardRatio);
+        setAiInsight(result);
+    } catch (e) {
+        setAiInsight("Could not complete analysis.");
+    } finally {
+        setIsAnalyzing(false);
+    }
   };
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
