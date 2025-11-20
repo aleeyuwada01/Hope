@@ -1,6 +1,6 @@
 
 import React, { forwardRef } from 'react';
-import { CheckpointRow, PlanProgress } from '../types';
+import { CheckpointRow, PlanProgress, CurrencyCode } from '../types';
 import { formatCurrency } from '../services/calculationService';
 import { CheckCircle2, XCircle, Lock } from 'lucide-react';
 
@@ -9,9 +9,10 @@ interface SpreadsheetProps {
   isInteractive: boolean;
   planProgress: PlanProgress;
   onRegisterResult: (stepId: number, result: 'WIN' | 'LOSS', amount: number) => void;
+  currency: CurrencyCode;
 }
 
-const Spreadsheet = forwardRef<HTMLDivElement, SpreadsheetProps>(({ data, isInteractive, planProgress, onRegisterResult }, ref) => {
+const Spreadsheet = forwardRef<HTMLDivElement, SpreadsheetProps>(({ data, isInteractive, planProgress, onRegisterResult, currency }, ref) => {
   
   return (
     <div ref={ref} className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-sm border-2 border-slate-300 dark:border-slate-600 inline-block min-w-full transition-colors">
@@ -56,7 +57,7 @@ const Spreadsheet = forwardRef<HTMLDivElement, SpreadsheetProps>(({ data, isInte
                 
                 {/* Amount Column */}
                 <td className="p-3 border-r-2 border-slate-200 dark:border-slate-600 bg-emerald-100/60 dark:bg-emerald-900/30 font-mono text-emerald-900 dark:text-emerald-300 font-bold text-lg">
-                    {formatCurrency(row.amount)}
+                    {formatCurrency(row.amount, currency)}
                 </td>
                 
                 {/* Lot Size Column */}
@@ -66,7 +67,7 @@ const Spreadsheet = forwardRef<HTMLDivElement, SpreadsheetProps>(({ data, isInte
                 
                 {/* Profit Column */}
                 <td className={`p-3 text-right font-mono text-slate-900 dark:text-slate-100 font-black text-lg ${isInteractive ? 'border-r-2 border-slate-200 dark:border-slate-600' : ''}`}>
-                    {formatCurrency(row.profit).replace('$', '')}
+                    {formatCurrency(row.profit, currency).replace(/[$₦]/, '')}
                 </td>
 
                 {/* Interactive Actions Column */}
